@@ -1,0 +1,25 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Inventory collection rules
+    match /inventory/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Sales collection rules
+    match /sales/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Categories collection rules
+    match /categories/{categoryId} {
+      allow write: if request.auth != null;
+      allow read: if request.auth != null;
+    }
+
+    // Default rule for all other collections
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+} 
