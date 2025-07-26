@@ -1,7 +1,7 @@
+import 'firebase/compat/analytics';
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
 import 'firebase/compat/firestore';
-import 'firebase/compat/analytics';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -89,4 +89,4 @@ export const testDatabaseConnection = async () => {
   }
 };
 
-export { db, auth }; 
+export { auth, db };

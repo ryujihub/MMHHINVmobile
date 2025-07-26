@@ -5,7 +5,6 @@ import { Text, TouchableOpacity, View } from 'react-native';
 import { auth } from './src/config/firebase';
 
 // Import screens
-import BorrowingScreen from './src/screens/BorrowingScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import InventoryScreen from './src/screens/InventoryScreen';
 import LoginScreen from './src/screens/LoginScreen';
@@ -73,13 +72,7 @@ export default function App() {
                 title: 'Inventory Management',
               }}
             />
-            <Stack.Screen 
-              name="Borrowing" 
-              component={BorrowingScreen}
-              options={{
-                title: 'Borrowing Management',
-              }}
-            />
+           
             <Stack.Screen 
               name="Settings" 
               component={SettingsScreen}

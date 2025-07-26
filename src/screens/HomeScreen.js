@@ -1,13 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { auth, db } from '../config/firebase';
 
@@ -28,20 +28,20 @@ export default function HomeScreen({ navigation }) {
     topSellingItem: '',
     monthlyGrowth: 0,
     inventoryMetrics: {
-      turnoverRate: 0,        // How quickly items are sold
-      stockValueByCategory: {}, // Total value of stock in each category
+      turnoverRate: 0,
+      stockValueByCategory: {},
       inventoryHealth: {
-        optimal: 0,    // Items with stock between min and max
-        overstocked: 0, // Items with stock above max
-        understocked: 0, // Items with stock below min
-        deadStock: 0    // Items with no movement
+        optimal: 0,
+        overstocked: 0,
+        understocked: 0,
+        deadStock: 0
       },
-      topPerformingItems: [], // Items with highest sales
-      categoryPerformance: {}, // Sales performance by category
+      topPerformingItems: [],
+      categoryPerformance: {},
       stockValueDistribution: {
-        highValue: 0,    // Items worth > ₱1000
-        mediumValue: 0,  // Items worth ₱100-₱1000
-        lowValue: 0      // Items worth < ₱100
+        highValue: 0,
+        mediumValue: 0,
+        lowValue: 0
       }
     }
   });
@@ -64,22 +64,19 @@ export default function HomeScreen({ navigation }) {
           ...doc.data()
         }));
         setItems(itemsArray);
-        
-        // Calculate statistics
+
         const totalValue = itemsArray.reduce((sum, item) => sum + (item.price * item.currentStock), 0);
         const lowStock = itemsArray.filter(item => item.currentStock < item.minimumStock && item.currentStock > 0).length;
         const outOfStock = itemsArray.filter(item => item.currentStock === 0).length;
         const categories = new Set(itemsArray.map(item => item.category)).size;
         const highValue = itemsArray.filter(item => (item.price * item.currentStock) > 1000).length;
-        
-        // Calculate sales statistics
+
         const totalSales = itemsArray.reduce((sum, item) => sum + (item.price * item.usage), 0);
         const prices = itemsArray.map(item => item.price || 0);
         const averagePrice = prices.length > 0 ? prices.reduce((a, b) => a + b, 0) / prices.length : 0;
         const highestPrice = Math.max(...prices, 0);
         const lowestPrice = Math.min(...prices.filter(price => price > 0), 0) || 0;
-        
-        // Enhanced price statistics
+
         const categoryAverages = {};
         const categoryPrices = {};
         itemsArray.forEach(item => {
@@ -95,35 +92,28 @@ export default function HomeScreen({ navigation }) {
           categoryAverages[category] = prices.reduce((a, b) => a + b, 0) / prices.length;
         });
 
-        // Calculate price ranges
         const priceRanges = {
           low: itemsArray.filter(item => (item.price || 0) <= 100).length,
           medium: itemsArray.filter(item => (item.price || 0) > 100 && (item.price || 0) <= 500).length,
           high: itemsArray.filter(item => (item.price || 0) > 500 && (item.price || 0) <= 1000).length,
           premium: itemsArray.filter(item => (item.price || 0) > 1000).length
         };
-        
-        // Find top category
+
         const topCategory = Object.entries(categoryAverages)
           .sort(([,a], [,b]) => b - a)[0]?.[0] || 'N/A';
 
-        // Find top selling item
         const topSellingItem = itemsArray
           .sort((a, b) => (b.price * b.usage) - (a.price * a.usage))[0]?.name || 'N/A';
 
-        // Calculate monthly growth based on usage
         const monthlyGrowth = itemsArray.reduce((sum, item) => sum + item.usage, 0) / itemsArray.length || 0;
-        
-        // Calculate inventory metrics
+
         const now = new Date();
         const thirtyDaysAgo = new Date(now.setDate(now.getDate() - 30));
-        
-        // Calculate turnover rate (items sold / average inventory)
+
         const totalItemsSold = itemsArray.reduce((sum, item) => sum + item.usage, 0);
         const averageInventory = itemsArray.reduce((sum, item) => sum + item.currentStock, 0) / itemsArray.length;
         const turnoverRate = averageInventory > 0 ? (totalItemsSold / averageInventory) * 100 : 0;
 
-        // Calculate stock value by category
         const stockValueByCategory = {};
         itemsArray.forEach(item => {
           if (item.category) {
@@ -132,24 +122,22 @@ export default function HomeScreen({ navigation }) {
           }
         });
 
-        // Calculate inventory health
         const inventoryHealth = {
-          optimal: itemsArray.filter(item => 
-            item.currentStock >= item.minimumStock && 
+          optimal: itemsArray.filter(item =>
+            item.currentStock >= item.minimumStock &&
             item.currentStock <= (item.maximumStock || item.minimumStock * 2)
           ).length,
-          overstocked: itemsArray.filter(item => 
+          overstocked: itemsArray.filter(item =>
             item.currentStock > (item.maximumStock || item.minimumStock * 2)
           ).length,
-          understocked: itemsArray.filter(item => 
+          understocked: itemsArray.filter(item =>
             item.currentStock < item.minimumStock && item.currentStock > 0
           ).length,
-          deadStock: itemsArray.filter(item => 
+          deadStock: itemsArray.filter(item =>
             item.usage === 0 && item.currentStock > 0
           ).length
         };
 
-        // Calculate top performing items (by sales value)
         const topPerformingItems = [...itemsArray]
           .sort((a, b) => (b.price * b.usage) - (a.price * a.usage))
           .slice(0, 5)
@@ -159,7 +147,6 @@ export default function HomeScreen({ navigation }) {
             stock: item.currentStock
           }));
 
-        // Calculate category performance
         const categoryPerformance = {};
         itemsArray.forEach(item => {
           if (item.category) {
@@ -177,11 +164,10 @@ export default function HomeScreen({ navigation }) {
           }
         });
 
-        // Calculate stock value distribution
         const stockValueDistribution = {
           highValue: itemsArray.filter(item => (item.price * item.currentStock) > 1000).length,
-          mediumValue: itemsArray.filter(item => 
-            (item.price * item.currentStock) >= 100 && 
+          mediumValue: itemsArray.filter(item =>
+            (item.price * item.currentStock) >= 100 &&
             (item.price * item.currentStock) <= 1000
           ).length,
           lowValue: itemsArray.filter(item => (item.price * item.currentStock) < 100).length
@@ -207,7 +193,7 @@ export default function HomeScreen({ navigation }) {
             stockValueDistribution
           }
         });
-        
+
         setLoading(false);
       },
       (error) => {
@@ -222,7 +208,6 @@ export default function HomeScreen({ navigation }) {
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
-    // Re-fetch data here
     setRefreshing(false);
   }, []);
 
@@ -240,7 +225,7 @@ export default function HomeScreen({ navigation }) {
       <View style={styles.errorContainer}>
         <Ionicons name="alert-circle" size={48} color="#FF3B30" />
         <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.errorButton}
           onPress={() => navigation.replace('Login')}
         >
@@ -251,7 +236,7 @@ export default function HomeScreen({ navigation }) {
   }
 
   return (
-    <ScrollView 
+    <ScrollView
       style={styles.container}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -264,7 +249,7 @@ export default function HomeScreen({ navigation }) {
             <View>
               <Text style={styles.welcomeText}>Welcome Back!</Text>
               <Text style={styles.dateText}>
-                {new Date().toLocaleDateString('en-US', { 
+                {new Date().toLocaleDateString('en-US', {
                   weekday: 'long',
                   year: 'numeric',
                   month: 'long',
@@ -272,7 +257,7 @@ export default function HomeScreen({ navigation }) {
                 })}
               </Text>
             </View>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.settingsButton}
               onPress={() => navigation.navigate('Settings')}
             >
@@ -312,7 +297,7 @@ export default function HomeScreen({ navigation }) {
 
       {/* Quick Actions */}
       <View style={styles.quickActionsContainer}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.quickActionButton}
           onPress={() => navigation.navigate('Inventory')}
         >
@@ -325,66 +310,6 @@ export default function HomeScreen({ navigation }) {
           </View>
           <Ionicons name="chevron-forward" size={24} color="#007AFF" />
         </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={styles.quickActionButton}
-          onPress={() => navigation.navigate('Borrowing')}
-        >
-          <View style={styles.quickActionContent}>
-            <Ionicons name="git-branch-outline" size={24} color="#007AFF" />
-            <View style={styles.quickActionText}>
-              <Text style={styles.quickActionTitle}>Borrowing</Text>
-              <Text style={styles.quickActionSubtitle}>Manage tool borrowing</Text>
-            </View>
-          </View>
-          <Ionicons name="chevron-forward" size={24} color="#007AFF" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Sales Overview */}
-      <View style={styles.sectionContainer}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Sales Overview</Text>
-          <TouchableOpacity>
-            <Text style={styles.sectionAction}>View Details</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.salesGrid}>
-          <View style={styles.salesCard}>
-            <View style={styles.salesCardHeader}>
-              <Ionicons name="trending-up" size={20} color="#2E7D32" />
-              <Text style={styles.salesCardTitle}>Total Sales</Text>
-            </View>
-            <Text style={styles.salesCardValue}>₱{stats.totalSales.toFixed(2)}</Text>
-            <Text style={styles.salesCardSubtext}>This month</Text>
-          </View>
-          <View style={styles.salesCard}>
-            <View style={styles.salesCardHeader}>
-              <Ionicons name="repeat" size={20} color="#1565C0" />
-              <Text style={styles.salesCardTitle}>Turnover</Text>
-            </View>
-            <Text style={styles.salesCardValue}>{stats.inventoryMetrics.turnoverRate.toFixed(1)}%</Text>
-            <Text style={styles.salesCardSubtext}>Last 30 days</Text>
-          </View>
-          <View style={styles.salesCard}>
-            <View style={styles.salesCardHeader}>
-              <Ionicons name="trending-up" size={20} color="#7B1FA2" />
-              <Text style={styles.salesCardTitle}>Growth</Text>
-            </View>
-            <Text style={styles.salesCardValue}>{stats.monthlyGrowth}%</Text>
-            <Text style={styles.salesCardSubtext}>Monthly</Text>
-          </View>
-          <View style={styles.salesCard}>
-            <View style={styles.salesCardHeader}>
-              <Ionicons name="star" size={20} color="#F57C00" />
-              <Text style={styles.salesCardTitle}>Top Category</Text>
-            </View>
-            <Text style={styles.salesCardValue}>{stats.topCategory}</Text>
-            <Text style={styles.salesCardSubtext}>
-              Sales: ₱{stats.inventoryMetrics.categoryPerformance[stats.topCategory]?.totalSales.toFixed(2) || '0.00'}
-            </Text>
-          </View>
-        </View>
       </View>
 
       {/* Inventory Health */}
@@ -563,7 +488,7 @@ export default function HomeScreen({ navigation }) {
           </TouchableOpacity>
         </View>
         {items.slice(0, 5).map(item => (
-          <TouchableOpacity 
+          <TouchableOpacity
             key={item.id}
             style={styles.recentItemCard}
             onPress={() => navigation.navigate('Inventory')}
@@ -775,43 +700,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#007AFF',
     fontWeight: '500',
-  },
-  salesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 15,
-  },
-  salesCard: {
-    flex: 1,
-    minWidth: '45%',
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 15,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  salesCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
-  },
-  salesCardTitle: {
-    fontSize: 14,
-    color: '#666',
-  },
-  salesCardValue: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
-  },
-  salesCardSubtext: {
-    fontSize: 12,
-    color: '#999',
-    marginTop: 4,
   },
   recentItemCard: {
     backgroundColor: 'white',
@@ -1050,4 +938,4 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#666',
   },
-}); 
+});

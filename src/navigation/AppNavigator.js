@@ -1,13 +1,13 @@
-import React from 'react';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import HomeScreen from '../screens/HomeScreen';
 import InventoryScreen from '../screens/InventoryScreen';
 import LoginScreen from '../screens/LoginScreen';
-import SignUpScreen from '../screens/SignUpScreen';
+import SalesDetails from '../screens/SalesDetails';
 import SettingsScreen from '../screens/SettingsScreen';
+import SignUpScreen from '../screens/SignUpScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -85,7 +85,12 @@ export default function AppNavigator() {
           component={MainTabs}
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="SalesDetails"
+          component={SalesDetails}
+          options={{ title: 'Sales Details' }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
-} 
+}

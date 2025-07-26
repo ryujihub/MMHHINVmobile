@@ -15,8 +15,48 @@ import {
   View
 } from 'react-native';
 import { auth, db } from '../config/firebase';
+import { collection, query, onSnapshot } from 'firebase/firestore';
 
 export default function InventoryScreen({ navigation }) {
+  useEffect(() => {
+    const movementsRef = db.collection('stockMovements');
+    const unsubscribeMovements = movementsRef.onSnapshot(async (snapshot) => {
+      // Process only added or modified documents to avoid duplicate updates
+      const changes = snapshot.docChanges();
+      for (const change of changes) {
+        if (change.type === 'added' || change.type === 'modified') {
+          const mv = change.doc.data();
+          const item = items.find(i => i.productCode === mv.productCode);
+          if (item) {
+            let newStock = item.currentStock;
+            if (mv.type === 'out') {
+              newStock = item.currentStock - mv.quantity;
+            } else {
+              newStock = item.currentStock + mv.quantity;
+            }
+            if (newStock !== item.currentStock) {
+              await db.collection('inventory').doc(item.id).update({ currentStock: newStock });
+            }
+          }
+        }
+      }
+    });
+    return () => unsubscribeMovements();
+  }, [items]);
+
+  useEffect(() => {
+    const salesRef = collection(db, 'sales');
+    const salesQuery = query(salesRef);
+    const unsubscribeSales = onSnapshot(salesQuery, (snapshot) => {
+      // Handle sales updates here, e.g., refresh local state or trigger UI updates
+      console.log('Sales collection updated:', snapshot.docs.map(doc => doc.data()));
+      // You can implement logic to update inventory or sales stats based on sales changes
+    }, (error) => {
+      console.error('Error listening to sales collection:', error);
+    });
+
+    return () => unsubscribeSales();
+  }, []);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -230,8 +270,26 @@ export default function InventoryScreen({ navigation }) {
   const calculateVariance = (currentStock, minimumStock) => {
     const current = parseFloat(currentStock) || 0;
     const minimum = parseFloat(minimumStock) || 0;
+
+    // Adjust variance calculation to avoid showing potential loss if minimum stock is zero or very low
+    if (minimum === 0) {
+      return {
+        varianceQuantity: 0,
+        variancePercentage: 0
+      };
+    }
+
+    // Optionally, add a threshold to ignore small variances (e.g., less than 5%)
     const quantity = current - minimum;
-    const percentage = minimum !== 0 ? (quantity / minimum) * 100 : 0;
+    const percentage = (quantity / minimum) * 100;
+
+    if (percentage > -5) { // If variance is within -5%, consider it acceptable
+      return {
+        varianceQuantity: 0,
+        variancePercentage: 0
+      };
+    }
+
     return {
       varianceQuantity: quantity,
       variancePercentage: percentage
