@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
+  ActivityIndicator,
+  Alert,
   StyleSheet,
-  View,
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
-  ActivityIndicator,
+  View,
 } from 'react-native';
 import { signUp } from '../config/firebase';
 
@@ -126,6 +126,9 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 5,
     marginBottom: 10,
+    color: '#333333',
+    fontSize: 16,
+    fontFamily: 'System',
   },
   button: {
     backgroundColor: '#007AFF',
